@@ -1,0 +1,90 @@
+{
+    "extension": "linecount",
+    "version": "0.1.7",
+    "workspace": "c:\\Users\\rodrigo.fernandes\\Documents\\Desenvolvimento\\pinecone",
+    "linecount": [
+        {
+            "version": "0.1.7",
+            "counttime": "2017-07-19 15:44:26",
+            "filesum": 12,
+            "codesum": 5455,
+            "commentsum": 11,
+            "blanksum": 59,
+            "filelist": [
+                {
+                    "blank": 16,
+                    "code": 44,
+                    "comment": 3,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "config.js"
+                },
+                {
+                    "blank": 29,
+                    "code": 98,
+                    "comment": 7,
+                    "filename": "db.js"
+                },
+                {
+                    "filename": "db.sqlite",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 14,
+                    "code": 55,
+                    "comment": 1,
+                    "filename": "index.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 5187,
+                    "comment": 0,
+                    "filename": "package-lock.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "package.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": "queries\\createAlbumsTable.sql"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "queries\\createArtistsTable.sql"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "queries\\createRecentTracksTable.sql"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "queries\\createTracksTable.sql"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "README.md"
+                }
+            ]
+        }
+    ]
+}

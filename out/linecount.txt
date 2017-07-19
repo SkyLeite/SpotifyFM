@@ -1,0 +1,24 @@
+===============================================================================
+EXTENSION NAME : linecount
+EXTENSION VERSION : 0.1.7
+-------------------------------------------------------------------------------
+count time : 2017-07-19 15:44:26
+count workspace : c:\Users\rodrigo.fernandes\Documents\Desenvolvimento\pinecone
+total files : 12
+total code lines : 5455
+total comment lines : 11
+total blank lines : 59
+
+.gitignore, code is 44, comment is 3, blank is 16.
+config.js, code is 6, comment is 0, blank is 0.
+db.js, code is 98, comment is 7, blank is 29.
+db.sqlite, it is a binary file.
+index.js, code is 55, comment is 1, blank is 14.
+package-lock.json, code is 5187, comment is 0, blank is 0.
+package.json, code is 37, comment is 0, blank is 0.
+queries\createAlbumsTable.sql, code is 8, comment is 0, blank is 0.
+queries\createArtistsTable.sql, code is 6, comment is 0, blank is 0.
+queries\createRecentTracksTable.sql, code is 7, comment is 0, blank is 0.
+queries\createTracksTable.sql, code is 6, comment is 0, blank is 0.
+README.md, code is 1, comment is 0, blank is 0.
+===============================================================================
