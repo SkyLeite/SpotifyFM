@@ -5,6 +5,8 @@ const SpotifyWebApi = require('spotify-web-api-node');
 const config = require('./config.js');
 const opn = require('opn');
 const Spinner = require('cli-spinner').Spinner;
+const fs = require('mz/fs');
+const _ = require('lodash');
 
 const spotify = new SpotifyWebApi({
     clientId: config.clientId,
@@ -30,40 +32,53 @@ let authorizeSpotify = async () => {
         }
     });
 
-    app.listen(5000, async () => {
-        console.log('Server running on port 5000');
-    });
-
-    opn(authorizeURL);
+    app.listen(5000, () => { });
+    await opn(authorizeURL, { wait: true, app: 'chrome' })
 }
 
-const main = async () => {
-    await authorizeSpotify();
-    await db.updateDatabase();
-    console.log('Everything ready!');
-
-    // Build playlists
-    let songs = await db.getNewPlaylist();
-
-    let spinner = new Spinner('%s Building playlist...');
+const buildPlaylist = async (songs, name) => {
+    let spinner = new Spinner('%s Building playlist. This might take a while (go grab a cup of coffee).');
     spinner.setSpinnerString(10);
     spinner.start();
 
     let playlistTracks = [];
+    let i = 0;
     for (let song of songs) {
+        i ++;
+        spinner.setSpinnerTitle(`${(i / songs.length)}% Building playlist...`);
         let uri = await spotify.searchTracks('track:' + song.name + ' artist:' + song.artist.name);
-        if (uri.body.items) {
-            playlistTracks.push(uri.body.items[0].uri)
+        if (uri.body.tracks.items) {
+            try {
+                playlistTracks.push(uri.body.tracks.items[0].uri)
+            } catch (err) {
+                //console.log(err);
+            }
         }
     }
 
-    spinner.stop(true)
-    console.log('Playlist built. Creating on Spotify...');
-    console.log(playlistTracks);
+    let playlist = await spotify.createPlaylist('kaze.senoue', name, { public: true });
+    for (let i of _.chunk(playlistTracks, 99)) {
+        await spotify.addTracksToPlaylist('kaze.senoue', playlist.body.id, i);
+    }
+    spinner.stop(true);
+    console.log('-> Playlist successfully created. Have fun!');
+}
 
-    let playlist = await spotify.createPlaylist('kaze.senoue', 'Semaninha', { public: true });
-    await spotify.addTracksToPlaylist('kaze.senoue', playlist.body.id, playlistTracks);
-    console.log('Tracks added! o/');
+const main = async () => {
+    try {
+        await authorizeSpotify();
+        await db.updateDatabase();
+
+        // Build week playlist
+        await buildPlaylist(await db.getNewPlaylist(), 'Semaninha');
+
+        // Build discovery playlist
+        await buildPlaylist(await db.getDiscoveryPlaylist(), 'Novas');
+        
+        return;
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 (async () => await main())();

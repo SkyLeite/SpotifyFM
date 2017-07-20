@@ -107,27 +107,54 @@ module.exports = {
         }
 
         // Adds / updates artists and recent tracks on the database
-        //await getArtists();
-        //await getRecentTracks();
+        await getArtists();
+        await getRecentTracks();
     },
     getNewPlaylist: async () => {
         let tracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 100');
         let playlistTracks = [];
 
-        let spinner = new Spinner('%s Building playlist...');
+        let spinner = new Spinner('%s Selecting tracks...');
         spinner.setSpinnerString(10);
         spinner.start();
 
         for (let track of tracks) {
-            let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=1'))['similartracks']['track'];
+            let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=3'))['similartracks']['track'];
             
             for (let i of recommended) {
-                playlistTracks.push(i);
+                if (!playlistTracks.includes(i)){
+                    playlistTracks.push(i);
+                }
             }
         }
 
         spinner.stop(true);
-        console.log('Playlist built!');
+        console.log('-> Tracks selected');
+
+        return playlistTracks;
+    },
+    getDiscoveryPlaylist: async () => {
+        let recentTracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 300');
+
+        let spinner = new Spinner('%s Selecting tracks...');
+        spinner.setSpinnerString(10);
+        spinner.start();
+
+        let playlistTracks = [];
+        for (let track of recentTracks) {
+            let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=40'))['similartracks']['track'];
+
+            for (let recommendedTrack of recommended) {
+                let userTracks = await db.all('SELECT * FROM tracks WHERE track_name = ? AND track_artist_name = ?', recommendedTrack.name, recommendedTrack.artist.name);
+                if (userTracks.length === 0 && !playlistTracks.includes(recommendedTrack)) {
+                    playlistTracks.push(recommendedTrack);
+                    break;
+                }
+            }
+        }
+
+        spinner.stop(true);
+        console.log('-> Tracks selected');
 
         return playlistTracks;
     }
