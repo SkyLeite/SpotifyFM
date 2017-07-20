@@ -31,7 +31,7 @@ const getArtists = async () => {
             // if not, inserts the necessary data
             let cachedArtist = await db.all(`SELECT * FROM artists WHERE artist_name = ? AND artist_mbid ${artist.mbid !== "" ? `= '${artist.mbid}'` : 'IS NULL'}`, artist.name);
 
-            if (cachedArtist.length > 0 && cachedArtist.playcount !== artist.playcount) {
+            if (cachedArtist.length > 0 && cachedArtist.artist_playcount !== artist.playcount) {
                 await db.run(`UPDATE artists SET artist_playcount = ? WHERE artist_name = ? AND artist_mbid ${artist.mbid !== "" ? `= '${artist.mbid}'` : 'IS NULL'}`, artist.playcount, artist.name);
             }
             else {
@@ -88,7 +88,7 @@ const getAllTracks = async () => {
             }
 
             else if (cachedTrack['track_playcount'] !== track.playcount) {
-                await db.run('UPDATE tracks SET playcount = ? WHERE track_name = ? AND track_artist_name = ?', track.playcount, track.name, track.artist.name);
+                await db.run('UPDATE tracks SET track_playcount = ? WHERE track_name = ? AND track_artist_name = ?', track.playcount, track.name, track.artist.name);
             }
         }
         await db.exec('COMMIT;');
@@ -109,6 +109,7 @@ module.exports = {
         // Adds / updates artists and recent tracks on the database
         await getArtists();
         await getRecentTracks();
+        await getAllTracks();
     },
     getNewPlaylist: async () => {
         let tracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 100');
@@ -120,9 +121,9 @@ module.exports = {
 
         for (let track of tracks) {
             let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=3'))['similartracks']['track'];
-            
+
             for (let i of recommended) {
-                if (!playlistTracks.includes(i)){
+                if (!playlistTracks.includes(i)) {
                     playlistTracks.push(i);
                 }
             }
@@ -134,28 +135,32 @@ module.exports = {
         return playlistTracks;
     },
     getDiscoveryPlaylist: async () => {
-        let recentTracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 300');
+        try {
+            let recentTracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 300');
 
-        let spinner = new Spinner('%s Selecting tracks...');
-        spinner.setSpinnerString(10);
-        spinner.start();
+            let spinner = new Spinner('%s Selecting tracks...');
+            spinner.setSpinnerString(10);
+            spinner.start();
 
-        let playlistTracks = [];
-        for (let track of recentTracks) {
-            let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=40'))['similartracks']['track'];
+            let playlistTracks = [];
+            for (let track of recentTracks) {
+                let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=40'))['similartracks']['track'];
 
-            for (let recommendedTrack of recommended) {
-                let userTracks = await db.all('SELECT * FROM tracks WHERE track_name = ? AND track_artist_name = ?', recommendedTrack.name, recommendedTrack.artist.name);
-                if (userTracks.length === 0 && !playlistTracks.includes(recommendedTrack)) {
-                    playlistTracks.push(recommendedTrack);
-                    break;
+                for (let recommendedTrack of recommended) {
+                    let userTracks = await db.all('SELECT * FROM tracks WHERE track_name = ? AND track_artist_name = ?', recommendedTrack.name, recommendedTrack.artist.name);
+                    if (userTracks.length === 0 && !playlistTracks.includes(recommendedTrack)) {
+                        playlistTracks.push(recommendedTrack);
+                        break;
+                    }
                 }
             }
+
+            spinner.stop(true);
+            console.log('-> Tracks selected');
+
+            return playlistTracks;
+        } catch(err) {
+            console.error(err);
         }
-
-        spinner.stop(true);
-        console.log('-> Tracks selected');
-
-        return playlistTracks;
     }
 }

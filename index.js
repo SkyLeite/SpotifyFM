@@ -3,6 +3,8 @@ const app = express();
 const db = require('./db.js');
 const SpotifyWebApi = require('spotify-web-api-node');
 const config = require('./config.js');
+const cache = require('./cache.json');
+const moment = require('moment');
 const opn = require('opn');
 const Spinner = require('cli-spinner').Spinner;
 const fs = require('mz/fs');
@@ -44,8 +46,8 @@ const buildPlaylist = async (songs, name) => {
     let playlistTracks = [];
     let i = 0;
     for (let song of songs) {
-        i ++;
-        spinner.setSpinnerTitle(`${(i / songs.length)}% Building playlist...`);
+        i++;
+        spinner.setSpinnerTitle(`${parseInt((i / songs.length) * 100)}% Building playlist...`);
         let uri = await spotify.searchTracks('track:' + song.name + ' artist:' + song.artist.name);
         if (uri.body.tracks.items) {
             try {
@@ -70,15 +72,29 @@ const main = async () => {
         await db.updateDatabase();
 
         // Build week playlist
-        await buildPlaylist(await db.getNewPlaylist(), 'Semaninha');
+        if (moment().diff(moment(cache.week), 'days') >= 7) {
+            await buildPlaylist(await db.getNewPlaylist(), 'Semaninha');
+            cache.week = moment();
+            fs.writeFile('cache.json', JSON.stringify(cache));
+        }
 
         // Build discovery playlist
-        await buildPlaylist(await db.getDiscoveryPlaylist(), 'Novas');
-        
+        if (moment().diff(moment(cache.new), 'days') >= 7) {
+            await buildPlaylist(await db.getDiscoveryPlaylist(), 'Novas');
+            cache.new = moment();
+            fs.writeFile('cache.json', JSON.stringify(cache));
+        }
+
         return;
     } catch (err) {
         console.error(err);
     }
 }
 
-(async () => await main())();
+(async () => {
+    await main();
+    setInterval(async () => {
+        await main();
+        return;
+    }, 50000);
+})();
