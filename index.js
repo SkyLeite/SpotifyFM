@@ -97,14 +97,14 @@ const main = async () => {
 
         // Build week playlist
         if (moment().diff(moment(cache.week), 'days') >= 7) {
-            await buildPlaylist(await db.getNewPlaylist(), 'Semaninha');
+            await buildPlaylist(await db.getNewPlaylist(), 'Last Week');
             cache.week = moment();
             fs.writeFile('cache.json', JSON.stringify(cache));
         }
 
         // Build discovery playlist
         if (moment().diff(moment(cache.new), 'days') >= 7) {
-            await buildPlaylist(await db.getDiscoveryPlaylist(), 'Novas');
+            await buildPlaylist(await db.getDiscoveryPlaylist(), 'Discovery');
             cache.new = moment();
             fs.writeFile('cache.json', JSON.stringify(cache));
         }
