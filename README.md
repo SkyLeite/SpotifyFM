@@ -43,7 +43,7 @@ These are the tokens you're gonna need to run this:
 
 - [Spotify Web API token](https://developer.spotify.com/my-applications/#!/applications/create)
 
-**IMPORTANT:** Don't forget to add `http://localhost:5000` as a callback URL when creating your Spotify Web API application
+**IMPORTANT:** Don't forget to add `http://localhost:5000/spotify` as a callback URL when creating your Spotify Web API application
 
 ## FAQ
 
