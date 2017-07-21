@@ -4,11 +4,15 @@ Automatically creates / updates playlists on your Spotify account based on your 
 
 The script runs continuously, meaning you can leave it running indefinitely and it'll always keep your playlists updated. By default they're updated every 7 days, but you can change the code easily to make it fit your needs.
 
+## Requirements
+
+- [Node.js](https://nodejs.org/en/download/current/)
+
 ## Running
 
 0. Make sure you have Node.JS installed (`node -v`)
 
-1. Clone the repository:
+1. Clone the repository OR [click here to download the ZIP](https://github.com/Kxze/SpotifyFM/archive/master.zip):
 
 ```git clone https://github.com/Kxze/SpotifyFM.git```
 
