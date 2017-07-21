@@ -26,8 +26,8 @@ The script runs continuously, meaning you can leave it running indefinitely and 
 module.exports = {
     user: '', // Your Last.FM username
     token: '', // Your Last.FM API Token (see 'Tokens')
-    clientId: '', // Your Spotify client ID
-    clientSecret: '' // Your Spotify client secret
+    clientId: '', // Your Spotify client ID (see 'Tokens')
+    clientSecret: '' // Your Spotify client secret (see 'Tokens')
 }
 ```
 
