@@ -20,25 +20,32 @@ let authorizeSpotify = async () => {
     let data = await spotify.clientCredentialsGrant();
     await spotify.setAccessToken(data.body['access_token']);
 
-    let authorizeURL = await spotify.createAuthorizeURL(['playlist-modify-public', 'playlist-modify-private'], 'state');
+    let authorizeURL = await spotify.createAuthorizeURL(['playlist-modify-public', 'playlist-modify-private', 'playlist-read-private', 'playlist-read-collaborative'], 'state');
 
-    app.get('/spotify', async (req, res) => {
-        try {
-            let data = await spotify.authorizationCodeGrant(req.query.code);
-            await spotify.setAccessToken(data.body['access_token']);
-            await spotify.setRefreshToken(data.body['refresh_token']);
-            return res.send('<script>window.close()</script>');
-        }
-        catch (err) {
-            console.log(err);
-        }
-    });
+    return new Promise((resolve, reject) => {
+        app.get('/spotify', async (req, res) => {
+            try {
+                let data = await spotify.authorizationCodeGrant(req.query.code);
+                await spotify.setAccessToken(data.body['access_token']);
+                await spotify.setRefreshToken(data.body['refresh_token']);
+                res.send('<script>window.close()</script>');
+                resolve('hi');
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
 
-    app.listen(5000, () => { });
-    await opn(authorizeURL, { wait: true, app: 'chrome' })
+        app.listen(5000, async () => { });
+        opn(authorizeURL, { app: 'chrome' });
+    })
 }
 
 const buildPlaylist = async (songs, name) => {
+    let userPlaylists = (await spotify.getUserPlaylists(await spotify.getMe())).body.items.map(i => {
+        return i.name;
+    });
+
     let spinner = new Spinner('%s Building playlist. This might take a while (go grab a cup of coffee).');
     spinner.setSpinnerString(10);
     spinner.start();
@@ -53,17 +60,34 @@ const buildPlaylist = async (songs, name) => {
             try {
                 playlistTracks.push(uri.body.tracks.items[0].uri)
             } catch (err) {
-                //console.log(err);
+                // console.log(err);
             }
         }
     }
 
-    let playlist = await spotify.createPlaylist('kaze.senoue', name, { public: true });
-    for (let i of _.chunk(playlistTracks, 99)) {
-        await spotify.addTracksToPlaylist('kaze.senoue', playlist.body.id, i);
+    if (!userPlaylists.includes(name)) {
+        let playlist = await spotify.createPlaylist((await spotify.getMe()).body.id, name, { public: true });
+        for (let i of _.chunk(playlistTracks, 99)) {
+            await spotify.addTracksToPlaylist((await spotify.getMe()).body.id, playlist.body.id, i);
+        }
+
+        spinner.stop(true);
+        console.log('-> Playlist ' + name + ' has been created. Have fun!');
     }
-    spinner.stop(true);
-    console.log('-> Playlist successfully created. Have fun!');
+    else {
+        let playlist = (await spotify.getUserPlaylists((await spotify.getMe()).body.id)).body.items.filter(i => i.name === name)[0].id;
+        for (let [index, values] of _.chunk(playlistTracks, 99).entries()) {
+            if (index === 0) {
+                await spotify.replaceTracksInPlaylist((await spotify.getMe()).body.id, playlist, values);
+            }
+            else {
+                await spotify.addTracksToPlaylist((await spotify.getMe()).body.id, playlist, values);
+            }
+        }
+
+        spinner.stop(true);
+        console.log('-> Playlist ' + name + ' has been updated. Have fun!');
+    }
 }
 
 const main = async () => {
@@ -96,5 +120,5 @@ const main = async () => {
     setInterval(async () => {
         await main();
         return;
-    }, 50000);
+    }, 1000000);
 })();

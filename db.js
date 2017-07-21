@@ -120,12 +120,16 @@ module.exports = {
         spinner.start();
 
         for (let track of tracks) {
-            let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=3'))['similartracks']['track'];
+            try {
+                let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=3'))['similartracks']['track'];
 
-            for (let i of recommended) {
-                if (!playlistTracks.includes(i)) {
-                    playlistTracks.push(i);
+                for (let i of recommended) {
+                    if (!playlistTracks.includes(i)) {
+                        playlistTracks.push(i);
+                    }
                 }
+            } catch (err) {
+                continue;
             }
         }
 
@@ -135,15 +139,15 @@ module.exports = {
         return playlistTracks;
     },
     getDiscoveryPlaylist: async () => {
-        try {
-            let recentTracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 300');
+        let recentTracks = await db.all('SELECT * FROM recent_tracks ORDER BY track_scrobble_date DESC LIMIT 300');
 
-            let spinner = new Spinner('%s Selecting tracks...');
-            spinner.setSpinnerString(10);
-            spinner.start();
+        let spinner = new Spinner('%s Selecting tracks...');
+        spinner.setSpinnerString(10);
+        spinner.start();
 
-            let playlistTracks = [];
-            for (let track of recentTracks) {
+        let playlistTracks = [];
+        for (let track of recentTracks) {
+            try {
                 let recommended = (await getData('track.getsimilar', 'track=' + encodeURIComponent(track['track_name']), 'artist=' + encodeURIComponent(track['track_artist_name']), 'limit=40'))['similartracks']['track'];
 
                 for (let recommendedTrack of recommended) {
@@ -152,15 +156,16 @@ module.exports = {
                         playlistTracks.push(recommendedTrack);
                         break;
                     }
+
                 }
+            } catch (err) {
+                continue;
             }
-
-            spinner.stop(true);
-            console.log('-> Tracks selected');
-
-            return playlistTracks;
-        } catch(err) {
-            console.error(err);
         }
+
+        spinner.stop(true);
+        console.log('-> Tracks selected');
+
+        return playlistTracks;
     }
 }
